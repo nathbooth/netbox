@@ -1,111 +1,129 @@
-{% extends '_base.html' %}
+{% extends 'ipam/vlan/base.html' %}
+{% load helpers %}
 {% load render_table from django_tables2 %}
-
-{% block title %}VLAN {{ vlan.display_name }}{% endblock %}
+{% load plugins %}
+{% load i18n %}
+{% load mptt %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-9">
-        <ol class="breadcrumb">
-            <li><a href="{% url 'dcim:site' slug=vlan.site.slug %}">{{ vlan.site }}</a></li>
-            <li><a href="{% url 'ipam:vlan_list' %}?site={{ vlan.site.slug }}">VLANs</a></li>
-            <li>{{ vlan.name }} ({{ vlan.vid }})</li>
-        </ol>
-    </div>
-    <div class="col-md-3">
-    <form action="{% url 'ipam:vlan_list' %}" method="get">
-        <div class="input-group">
-            <input type="text" name="vid" class="form-control" placeholder="VLAN ID search" />
-            <span class="input-group-btn">
-                <button type="submit" class="btn btn-primary">
-                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
-                </button>
-            </span>
-        </div>
-    </form>
-    </div>
-</div>
-<div class="pull-right">
-    {% if perms.ipam.change_vlan %}
-        <a href="{% url 'ipam:vlan_edit' pk=vlan.pk %}" class="btn btn-warning">
-            <span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-            Edit this VLAN
-        </a>
-    {% endif %}
-    {% if perms.ipam.delete_vlan %}
-        <a href="{% url 'ipam:vlan_delete' pk=vlan.pk %}" class="btn btn-danger">
-            <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-            Delete this VLAN
-        </a>
-    {% endif %}
-</div>
-<h1>VLAN {{ vlan.display_name }}</h1>
-<div class="row">
-	<div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>VLAN</strong>
-            </div>
-            <table class="table table-hover panel-body">
-                <tr>
-                    <td>Site</td>
-                    <td><a href="{% url 'dcim:site' slug=vlan.site.slug %}">{{ vlan.site }}</a></td>
-                </tr>
-                <tr>
-                    <td>VLAN ID</td>
-                    <td>{{ vlan.vid }}</td>
-                </tr>
-                <tr>
-                    <td>Name</td>
-                    <td>{{ vlan.name }}</td>
-                </tr>
-                <tr>
-                    <td>Status</td>
-                    <td>
-                        <span class="label label-{{ vlan.get_status_class }}">{{ vlan.get_status_display }}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Role</td>
-                    <td>{{ vlan.role }}</td>
-                </tr>
-                <tr>
-                    <td>Created</td>
-                    <td>{{ vlan.created }}</td>
-                </tr>
-                <tr>
-                    <td>Last Updated</td>
-                    <td>{{ vlan.last_updated }}</td>
-                </tr>
-		    </table>
-        </div>
-	</div>
-	<div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Prefixes</strong>
-            </div>
-            {% if prefixes %}
-                <table class="table table-hover panel-body">
-                    {% for p in prefixes %}
+    <div class="row">
+        <div class="col col-md-6">
+            <div class="card">
+                <h2 class="card-header">{% trans "VLAN" %}</h2>
+                <table class="table table-hover attr-table">
+                    {% if object.site.region %}
                         <tr>
+                            <th scope="row">{% trans "Region" %}</th>
                             <td>
-                                <a href="{% url 'ipam:prefix' pk=p.pk %}">{{ p }}</a>
+                                {% nested_tree object.site.region %}
                             </td>
-                            <td>
-                                {% if p.site %}
-                                    <a href="{% url 'dcim:site' slug=p.site.slug %}">{{ p.site }}</a>
-                                {% endif %}
-                            </td>
-                            <td>{{ p.get_status_display }}</td>
-                            <td>{{ p.role }}</td>
                         </tr>
-                    {% endfor %}
+                    {% endif %}
+                    <tr>
+                        <th scope="row">{% trans "Site" %}</th>
+                        <td>{{ object.site|linkify|placeholder }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Group" %}</th>
+                        <td>{{ object.group|linkify|placeholder }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "VLAN ID" %}</th>
+                        <td>{{ object.vid }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Name" %}</th>
+                        <td>{{ object.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Tenant" %}</th>
+                        <td>
+                            {% if object.tenant.group %}
+                                {{ object.tenant.group|linkify }} /
+                            {% endif %}
+                            {{ object.tenant|linkify|placeholder }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Status" %}</th>
+                        <td>{% badge object.get_status_display bg_color=object.get_status_color %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Role" %}</th>
+                        <td>
+                            {% if object.role %}
+                                <a href="{% url 'ipam:vlan_list' %}?role={{ object.role.slug }}">{{ object.role }}</a>
+                            {% else %}
+                                {{ ''|placeholder }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Description" %}</th>
+                        <td>{{ object.description|placeholder }}</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">{% trans "Q-in-Q Role" %}</th>
+                      <td>
+                        {% if object.qinq_role %}
+                          {% badge object.get_qinq_role_display bg_color=object.get_qinq_role_color %}
+                        {% else %}
+                          {{ ''|placeholder }}
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% if object.qinq_role == 'cvlan' %}
+                      <tr>
+                        <th scope="row">{% trans "Q-in-Q SVLAN" %}</th>
+                        <td>{{ object.qinq_svlan|linkify|placeholder }}</td>
+                      </tr>
+                    {% endif %}
+                    <tr>
+                      <th scope="row">{% trans "L2VPN" %}</th>
+                      <td>{{ object.l2vpn_termination.l2vpn|linkify|placeholder }}</td>
+                    </tr>
                 </table>
-            {% else %}
-                <div class="panel-body text-muted">None</div>
-            {% endif %}
+            </div>
+            {% plugin_left_page object %}
         </div>
-	</div>
-</div>
+        <div class="col col-md-6">
+          {% include 'inc/panels/custom_fields.html' %}
+          {% include 'inc/panels/tags.html' %}
+          {% include 'inc/panels/comments.html' %}
+          {% plugin_right_page object %}
+        </div>
+    </div>
+    <div class="row">
+      <div class="col col-md-12">
+        <div class="card">
+          <h2 class="card-header">
+            {% trans "Prefixes" %}
+            {% if perms.ipam.add_prefix %}
+              <div class="card-actions">
+                <a href="{% url 'ipam:prefix_add' %}?{% if object.tenant %}tenant={{ object.tenant.pk }}&{% endif %}site={{ object.site.pk }}&vlan={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+                  <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add a Prefix" %}
+                </a>
+              </div>
+            {% endif %}
+          </h2>
+          {% htmx_table 'ipam:prefix_list' vlan_id=object.pk %}
+        </div>
+        {% if object.qinq_role == 'svlan' %}
+          <div class="card">
+            <h2 class="card-header">
+              {% trans "Customer VLANs" %}
+              {% if perms.ipam.add_vlan %}
+                <div class="card-actions">
+                  <a href="{% url 'ipam:vlan_add' %}?qinq_role=cvlan&qinq_svlan={{ object.pk }}" class="btn btn-ghost-primary btn-sm">
+                    <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add a VLAN" %}
+                  </a>
+                </div>
+              {% endif %}
+            </h2>
+            {% htmx_table 'ipam:vlan_list' qinq_svlan_id=object.pk %}
+          </div>
+        {% endif %}
+        {% plugin_full_width_page object %}
+      </div>
+    </div>
 {% endblock %}

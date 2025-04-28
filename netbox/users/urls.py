@@ -1,15 +1,21 @@
-from django.conf.urls import url
+from django.urls import include, path
 
-from . import views
+from utilities.urls import get_model_urls
+from . import views  # noqa F401
 
-
+app_name = 'users'
 urlpatterns = [
 
-    # User profiles
-    url(r'^profile/$', views.profile, name='profile'),
-    url(r'^profile/password/$', views.change_password, name='change_password'),
-    url(r'^profile/user-key/$', views.userkey, name='userkey'),
-    url(r'^profile/user-key/edit/$', views.userkey_edit, name='userkey_edit'),
-    url(r'^profile/recent-activity/$', views.recent_activity, name='recent_activity'),
+    path('tokens/', include(get_model_urls('users', 'token', detail=False))),
+    path('tokens/<int:pk>/', include(get_model_urls('users', 'token'))),
+
+    path('users/', include(get_model_urls('users', 'user', detail=False))),
+    path('users/<int:pk>/', include(get_model_urls('users', 'user'))),
+
+    path('groups/', include(get_model_urls('users', 'group', detail=False))),
+    path('groups/<int:pk>/', include(get_model_urls('users', 'group'))),
+
+    path('permissions/', include(get_model_urls('users', 'objectpermission', detail=False))),
+    path('permissions/<int:pk>/', include(get_model_urls('users', 'objectpermission'))),
 
 ]

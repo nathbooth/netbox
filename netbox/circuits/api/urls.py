@@ -1,25 +1,26 @@
-from django.conf.urls import url
-
-from extras.models import GRAPH_TYPE_PROVIDER
-from extras.api.views import GraphListView
-
-from .views import *
+from netbox.api.routers import NetBoxRouter
+from . import views
 
 
-urlpatterns = [
+router = NetBoxRouter()
+router.APIRootView = views.CircuitsRootView
 
-    # Providers
-    url(r'^providers/$', ProviderListView.as_view(), name='provider_list'),
-    url(r'^providers/(?P<pk>\d+)/$', ProviderDetailView.as_view(), name='provider_detail'),
-    url(r'^providers/(?P<pk>\d+)/graphs/$', GraphListView.as_view(), {'type': GRAPH_TYPE_PROVIDER},
-        name='provider_graphs'),
+# Providers
+router.register('providers', views.ProviderViewSet)
+router.register('provider-accounts', views.ProviderAccountViewSet)
+router.register('provider-networks', views.ProviderNetworkViewSet)
 
-    # Circuit types
-    url(r'^circuit-types/$', CircuitTypeListView.as_view(), name='circuittype_list'),
-    url(r'^circuit-types/(?P<pk>\d+)/$', CircuitTypeDetailView.as_view(), name='circuittype_detail'),
+# Circuits
+router.register('circuit-types', views.CircuitTypeViewSet)
+router.register('circuits', views.CircuitViewSet)
+router.register('circuit-terminations', views.CircuitTerminationViewSet)
+router.register('circuit-groups', views.CircuitGroupViewSet)
+router.register('circuit-group-assignments', views.CircuitGroupAssignmentViewSet)
 
-    # Circuits
-    url(r'^circuits/$', CircuitListView.as_view(), name='circuit_list'),
-    url(r'^circuits/(?P<pk>\d+)/$', CircuitDetailView.as_view(), name='circuit_detail'),
+# Virtual circuits
+router.register('virtual-circuits', views.VirtualCircuitViewSet)
+router.register('virtual-circuit-types', views.VirtualCircuitTypeViewSet)
+router.register('virtual-circuit-terminations', views.VirtualCircuitTerminationViewSet)
 
-]
+app_name = 'circuits-api'
+urlpatterns = router.urls

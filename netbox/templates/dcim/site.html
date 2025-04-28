@@ -1,153 +1,154 @@
-{% extends '_base.html' %}
-{% load static from staticfiles %}
-{% load render_table from django_tables2 %}
+{% extends 'generic/object.html' %}
 {% load helpers %}
+{% load plugins %}
+{% load tz %}
+{% load i18n %}
+{% load l10n %}
+{% load mptt %}
 
-{% block title %}{{ site }}{% endblock %}
-
-{% block content %}
-<div class="pull-right">
-    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#graphs_modal" data-obj="{{ site.name }}" data-url="{% url 'dcim-api:site_graphs' pk=site.pk %}" title="Show graphs">
-        <i class="glyphicon glyphicon-signal" aria-hidden="true"></i>
-        Graphs
-    </button>
-    {% if perms.dcim.change_site %}
-		<a href="{% url 'dcim:site_edit' slug=site.slug %}" class="btn btn-warning">
-			<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-			Edit this site
-		</a>
-    {% endif %}
-    {% if perms.dcim.delete_site %}
-		<a href="{% url 'dcim:site_delete' slug=site.slug %}" class="btn btn-danger">
-			<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-			Delete this site
-		</a>
-    {% endif %}
-</div>
-<h1>{{ site.name }}</h1>
-<div class="row">
-	<div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Site</strong>
-            </div>
-            <table class="table table-hover panel-body">
-                <tr>
-                    <td>Facility</td>
-                    <td>{{ site.facility }}</td>
-                </tr>
-                <tr>
-                    <td>AS Number</td>
-                    <td>{{ site.asn }}</td>
-                </tr>
-                <tr>
-                    <td>Physical Address</td>
-                    <td>
-                        {% if site.physical_address %}
-                            <div class="pull-right">
-                                <a href="http://maps.google.com/?q={{ site.physical_address|oneline }}" target="_blank" class="btn btn-primary btn-xs">
-                                    <i class="glyphicon glyphicon-map-marker"></i> Map it
-                                </a>
-                            </div>
-                        {% endif %}
-                        <span>{{ site.physical_address|linebreaksbr }}</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Shipping Address</td>
-                    <td>
-                        {% if site.shipping_address %}
-                            <span>{{ site.shipping_address|linebreaksbr }}</span>
-                        {% else %}
-                            <span class="text-muted">See physical address</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                <tr>
-                    <td>Created</td>
-                    <td>{{ site.created }}</td>
-                </tr>
-                <tr>
-                    <td>Last Updated</td>
-                    <td>{{ site.last_updated }}</td>
-                </tr>
-            </table>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Comments</strong>
-            </div>
-            <div class="panel-body">
-                {% if site.comments  %}
-                    {{ site.comments|gfm }}
-                {% else %}
-                    <span class="text-muted">None</span>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    <div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Stats</strong>
-            </div>
-            <table class="table table-hover panel-body">
-                <tr>
-                    <td>Racks</td>
-                    <td>
-                        <a href="{% url 'dcim:rack_list' %}?site={{ site.slug }}">{{ stats.rack_count }}</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Devices</td>
-                    <td>
-                        <a href="{% url 'dcim:device_list' %}?site={{ site.slug }}">{{ stats.device_count }}</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Prefixes</td>
-                    <td>
-                        <a href="{% url 'ipam:prefix_list' %}?site={{ site.slug }}">{{ stats.prefix_count }}</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>VLANs</td>
-                    <td>
-                        <a href="{% url 'ipam:vlan_list' %}?site={{ site.slug }}">{{ stats.vlan_count }}</a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Circuits</td>
-                    <td>
-                        <a href="{% url 'circuits:circuit_list' %}?site={{ site.slug }}">{{ stats.circuit_count }}</a>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Topology Maps</strong>
-            </div>
-            {% if topology_maps %}
-                <table class="table table-hover panel-body">
-                    {% for tm in topology_maps %}
-                        <tr>
-                            <td><i class="fa fa-fw fa-map text-success"></i> <a href="{% url 'dcim-api:topology_map' slug=tm.slug %}" target="_blank">{{ tm }}</a></td>
-                            <td>{{ tm.description }}</td>
-                        </tr>
-                    {% endfor %}
-                </table>
-            {% else %}
-                <div class="panel-body text-muted">
-                    None
-                </div>
-            {% endif %}
-        </div>
-	</div>
-</div>
-{% include 'inc/graphs_modal.html' %}
+{% block breadcrumbs %}
+  {{ block.super }}
+  {% if object.region %}
+    {% for region in object.region.get_ancestors %}
+      <li class="breadcrumb-item"><a href="{% url 'dcim:site_list' %}?region_id={{ region.pk }}">{{ region }}</a></li>
+    {% endfor %}
+    <li class="breadcrumb-item"><a href="{% url 'dcim:site_list' %}?region_id={{ object.region.pk }}">{{ object.region }}</a></li>
+  {% elif object.group %}
+    {% for group in object.group.get_ancestors %}
+      <li class="breadcrumb-item"><a href="{% url 'dcim:site_list' %}?group_id={{ group.pk }}">{{ group }}</a></li>
+    {% endfor %}
+    <li class="breadcrumb-item"><a href="{% url 'dcim:site_list' %}?group_id={{ object.group.pk }}">{{ object.group }}</a></li>
+  {% endif %}
 {% endblock %}
 
-{% block javascript %}
-<script src="{% static 'js/graphs.js' %}"></script>
+{% block content %}
+<div class="row">
+	<div class="col col-md-6">
+    <div class="card">
+      <h2 class="card-header">{% trans "Site" %}</h2>
+      <table class="table table-hover attr-table">
+        <tr>
+          <th scope="row">{% trans "Region" %}</th>
+          <td>
+            {% nested_tree object.region %}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Group" %}</th>
+          <td>
+            {% nested_tree object.group %}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Status" %}</th>
+          <td>{% badge object.get_status_display bg_color=object.get_status_color %}</td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Tenant" %}</th>
+          <td>
+            {% if object.tenant.group %}
+              {{ object.tenant.group|linkify }} /
+            {% endif %}
+            {{ object.tenant|linkify|placeholder }}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Facility" %}</th>
+          <td>{{ object.facility|placeholder }}</td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Description" %}</th>
+          <td>{{ object.description|placeholder }}</td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Time Zone" %}</th>
+          <td>
+            {% if object.time_zone %}
+              {{ object.time_zone }} ({% trans "UTC" %} {{ object.time_zone|tzoffset }})<br />
+              <small class="text-muted">{% trans "Site time" %}: {% timezone object.time_zone %}{% now 'Y-m-d H:i' %}{% endtimezone %}</small>
+            {% else %}
+              {{ ''|placeholder }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Physical Address" %}</th>
+          <td class="d-flex justify-content-between align-items-start">
+            {% if object.physical_address %}
+              <span>{{ object.physical_address|linebreaksbr }}</span>
+              {% if config.MAPS_URL %}
+                <a href="{{ config.MAPS_URL }}{{ object.physical_address|urlencode }}" target="_blank" class="btn btn-primary btn-sm d-print-none">
+                  <i class="mdi mdi-map-marker"></i> {% trans "Map" %}
+                </a>
+              {% endif %}
+            {% else %}
+              {{ ''|placeholder }}
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "Shipping Address" %}</th>
+          <td>{{ object.shipping_address|linebreaksbr|placeholder }}</td>
+        </tr>
+        <tr>
+          <th scope="row">{% trans "GPS Coordinates" %}</th>
+          <td class="position-relative">
+            {% if object.latitude and object.longitude %}
+              {% if config.MAPS_URL %}
+                <div class="position-absolute top-50 end-0 me-2 translate-middle-y d-print-none">
+                  <a href="{{ config.MAPS_URL }}{{ object.latitude|unlocalize }},{{ object.longitude|unlocalize }}" target="_blank" class="btn btn-primary btn-sm">
+                    <i class="mdi mdi-map-marker"></i> {% trans "Map" %}
+                  </a>
+                </div>
+                {% endif %}
+              <span>{{ object.latitude }}, {{ object.longitude }}</span>
+            {% else %}
+              {{ ''|placeholder }}
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+    {% include 'inc/panels/custom_fields.html' %}
+    {% include 'inc/panels/tags.html' %}
+    {% include 'inc/panels/comments.html' %}
+    {% plugin_left_page object %}
+    </div>
+    <div class="col col-md-6">
+      {% include 'inc/panels/related_objects.html' with filter_name='site_id' %}
+      {% include 'inc/panels/image_attachments.html' %}
+      {% plugin_right_page object %}
+	</div>
+</div>
+<div class="row">
+  <div class="col col-md-12">
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "Locations" %}
+        {% if perms.dcim.add_location %}
+          <div class="card-actions">
+            <a href="{% url 'dcim:location_add' %}?site={{ object.pk }}&return_url={{ object.get_absolute_url }}" class="btn btn-ghost-primary btn-sm">
+              <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add a Location" %}
+            </a>
+          </div>
+        {% endif %}
+      </h2>
+      {% htmx_table 'dcim:location_list' site_id=object.pk %}
+    </div>
+    <div class="card">
+      <h2 class="card-header">
+        {% trans "Non-Racked Devices" %}
+        {% if perms.dcim.add_device %}
+          <div class="card-actions">
+            <a href="{% url 'dcim:device_add' %}?site={{ object.pk }}&return_url={{ object.get_absolute_url }}" class="btn btn-ghost-primary btn-sm">
+              <i class="mdi mdi-plus-thick" aria-hidden="true"></i> {% trans "Add a Device" %}
+            </a>
+          </div>
+        {% endif %}
+      </h2>
+      {% htmx_table 'dcim:device_list' site_id=object.pk rack_id='null' parent_bay_id='null' %}
+    </div>
+    {% plugin_full_width_page object %}
+  </div>
+</div>
 {% endblock %}

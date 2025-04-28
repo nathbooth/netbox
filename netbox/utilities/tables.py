@@ -1,30 +1,50 @@
-import django_tables2 as tables
+from django.utils.translation import gettext_lazy as _
+from netbox.registry import registry
 
-from django.utils.safestring import mark_safe
-
-
-class BaseTable(tables.Table):
-
-    def __init__(self, *args, **kwargs):
-        super(BaseTable, self).__init__(*args, **kwargs)
-
-        # Set default empty_text if none was provided
-        if self.empty_text is None:
-            self.empty_text = 'No {} found.'.format(self._meta.model._meta.verbose_name_plural)
-
-    class Meta:
-        attrs = {
-            'class': 'table table-hover',
-        }
+__all__ = (
+    'get_table_ordering',
+    'linkify_phone',
+    'register_table_column'
+)
 
 
-class ToggleColumn(tables.CheckBoxColumn):
+def get_table_ordering(request, table):
+    """
+    Given a request, return the prescribed table ordering, if any. This may be necessary to determine prior to rendering
+    the table itself.
+    """
+    # Check for an explicit ordering
+    if 'sort' in request.GET:
+        return request.GET['sort'] or None
 
-    def __init__(self, *args, **kwargs):
-        default = kwargs.pop('default', '')
-        visible = kwargs.pop('visible', False)
-        super(ToggleColumn, self).__init__(*args, default=default, visible=visible, **kwargs)
+    # Check for a configured preference
+    if request.user.is_authenticated:
+        if preference := request.user.config.get(f'tables.{table.__name__}.ordering'):
+            return preference
 
-    @property
-    def header(self):
-        return mark_safe('<input type="checkbox" name="_all" title="Select all" />')
+
+def linkify_phone(value):
+    """
+    Render a telephone number as a hyperlink.
+    """
+    if value is None:
+        return None
+    return f"tel:{value.replace(' ', '')}"
+
+
+def register_table_column(column, name, *tables):
+    """
+    Register a custom column for use on one or more tables.
+
+    Args:
+        column: The column instance to register
+        name: The name of the table column
+        tables: One or more table classes
+    """
+    for table in tables:
+        reg = registry['tables'][table]
+        if name in reg:
+            raise ValueError(_("A column named {name} is already defined for table {table_name}").format(
+                name=name, table_name=table.__name__
+            ))
+        reg[name] = column

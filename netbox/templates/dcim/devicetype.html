@@ -1,85 +1,112 @@
-{% extends '_base.html' %}
+{% extends 'dcim/devicetype/base.html' %}
+{% load buttons %}
 {% load helpers %}
-{% load render_table from django_tables2 %}
-
-{% block title %}{{ devicetype }}{% endblock %}
+{% load plugins %}
+{% load i18n %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <ol class="breadcrumb">
-            <li><a href="{% url 'dcim:devicetype_list' %}">Device Types</a></li>
-            <li><a href="{% url 'dcim:devicetype_list' %}?manufacturer={{ devicetype.manufacturer.slug }}">{{ devicetype.manufacturer }}</a></li>
-            <li>{{ devicetype.model }}</li>
-        </ol>
-    </div>
-</div>
-{% if perms.dcim.change_devicetype %}
-    <div class="pull-right">
-		<a href="{% url 'dcim:devicetype_edit' pk=devicetype.pk %}" class="btn btn-warning">
-			<span class="glyphicon glyphicon-pencil" aria-hidden="true"></span>
-			Edit this device type
-		</a>
-    {% endif %}
-    {% if perms.dcim.delete_devicetype %}
-		<a href="{% url 'dcim:devicetype_delete' pk=devicetype.pk %}" class="btn btn-danger">
-			<span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
-			Delete this device type
-		</a>
-    </div>
-{% endif %}
-<h1>{{ devicetype }}</h1>
-<div class="row">
-	<div class="col-md-6">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Chassis</strong>
+    <div class="row">
+        <div class="col col-md-6">
+            <div class="card">
+                <h2 class="card-header">{% trans "Chassis" %}</h2>
+                <table class="table table-hover attr-table">
+                    <tr>
+                        <th scope="row">{% trans "Manufacturer" %}</th>
+                        <td>{{ object.manufacturer|linkify }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Model Name" %}</th>
+                        <td>
+                            {{ object.model }}<br/>
+                            <small class="text-muted">{{ object.slug }}</small>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Part Number" %}</th>
+                        <td>{{ object.part_number|placeholder }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Default Platform" %}</th>
+                        <td>{{ object.default_platform|linkify }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Description" %}</th>
+                        <td>{{ object.description|placeholder }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Height (U)" %}</th>
+                        <td>{{ object.u_height|floatformat }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Exclude From Utilization" %}</th>
+                        <td>{% checkmark object.exclude_from_utilization %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Full Depth" %}</th>
+                        <td>{% checkmark object.is_full_depth %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Weight" %}</th>
+                        <td>
+                        {% if object.weight %}
+                          {{ object.weight|floatformat }} {{ object.get_weight_unit_display }}
+                        {% else %}
+                          {{ ''|placeholder }}
+                        {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Parent/Child" %}</th>
+                        <td>
+                            {{ object.get_subdevice_role_display|placeholder }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Airflow" %}</th>
+                        <td>
+                            {{ object.get_airflow_display|placeholder }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Front Image" %}</th>
+                        <td>
+                            {% if object.front_image %}
+                                <a href="{{ object.front_image.url }}">
+                                    <img src="{{ object.front_image.url }}" alt="{{ object.front_image.name }}" class="img-fluid" />
+                                </a>
+                            {% else %}
+                                {{ ''|placeholder }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">{% trans "Rear Image" %}</th>
+                        <td>
+                            {% if object.rear_image %}
+                                <a href="{{ object.rear_image.url }}">
+                                    <img src="{{ object.rear_image.url }}" alt="{{ object.rear_image.name }}" class="img-fluid" />
+                                </a>
+                            {% else %}
+                                {{ ''|placeholder }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
             </div>
-            <table class="table table-hover panel-body">
-                <tr>
-                    <td>Manufacturer</td>
-                    <td>{{ devicetype.manufacturer }}</td>
-                </tr>
-                <tr>
-                    <td>Model Name</td>
-                    <td>{{ devicetype.model }}</td>
-                </tr>
-                <tr>
-                    <td>Height (U)</td>
-                    <td>{{ devicetype.u_height }}</td>
-                </tr>
-                <tr>
-                    <td>Full Depth</td>
-                    <td>{{ devicetype.is_full_depth|yesno|capfirst }}</td>
-                </tr>
-            </table>
+            {% include 'inc/panels/tags.html' %}
+            {% plugin_left_page object %}
         </div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <strong>Function</strong>
-            </div>
-            <table class="table table-hover panel-body">
-                <tr>
-                    <td>Is a Console Server</td>
-                    <td>{{ devicetype.is_console_server|yesno|capfirst }}</td>
-                </tr>
-                <tr>
-                    <td>Is a PDU</td>
-                    <td>{{ devicetype.is_pdu|yesno|capfirst }}</td>
-                </tr>
-                <tr>
-                    <td>Is a Network Device</td>
-                    <td>{{ devicetype.is_network_device|yesno|capfirst }}</td>
-                </tr>
-            </table>
+        <div class="col col-md-6">
+            {% include 'inc/panels/related_objects.html' %}
+            {% include 'inc/panels/custom_fields.html' %}
+            {% include 'inc/panels/comments.html' %}
+            {% include 'inc/panels/image_attachments.html' %}
+            {% plugin_right_page object %}
         </div>
-        {% include 'dcim/inc/devicetype_component_table.html' with table=consoleport_table title='Console Ports' add_url='dcim:devicetype_add_consoleport' delete_url='dcim:devicetype_delete_consoleport' %}
-        {% include 'dcim/inc/devicetype_component_table.html' with table=powerport_table title='Power Ports' add_url='dcim:devicetype_add_powerport' delete_url='dcim:devicetype_delete_powerport' %}
     </div>
-	<div class="col-md-6">
-        {% include 'dcim/inc/devicetype_component_table.html' with table=interface_table title='Interfaces' add_url='dcim:devicetype_add_interface' delete_url='dcim:devicetype_delete_interface' %}
-        {% include 'dcim/inc/devicetype_component_table.html' with table=consoleserverport_table title='Console Server Ports' add_url='dcim:devicetype_add_consoleserverport' delete_url='dcim:devicetype_delete_consoleserverport' %}
-        {% include 'dcim/inc/devicetype_component_table.html' with table=poweroutlet_table title='Power Outlets' add_url='dcim:devicetype_add_poweroutlet' delete_url='dcim:devicetype_delete_poweroutlet' %}
+    <div class="row">
+        <div class="col col-md-12">
+            {% plugin_full_width_page object %}
+        </div>
     </div>
-</div>
 {% endblock %}

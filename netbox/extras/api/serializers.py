@@ -1,18 +1,15 @@
-from rest_framework import serializers
-
-from extras.models import Graph
-
-
-class GraphSerializer(serializers.ModelSerializer):
-    embed_url = serializers.SerializerMethodField()
-    embed_link = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Graph
-        fields = ['name', 'embed_url', 'embed_link']
-
-    def get_embed_url(self, obj):
-        return obj.embed_url(self.context['graphed_object'])
-
-    def get_embed_link(self, obj):
-        return obj.embed_link(self.context['graphed_object'])
+from .serializers_.objecttypes import *
+from .serializers_.attachments import *
+from .serializers_.bookmarks import *
+from .serializers_.customfields import *
+from .serializers_.customlinks import *
+from .serializers_.dashboard import *
+from .serializers_.events import *
+from .serializers_.exporttemplates import *
+from .serializers_.journaling import *
+from .serializers_.notifications import *
+from .serializers_.configcontexts import *
+from .serializers_.configtemplates import *
+from .serializers_.savedfilters import *
+from .serializers_.scripts import *
+from .serializers_.tags import *

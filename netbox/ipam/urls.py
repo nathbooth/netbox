@@ -1,71 +1,62 @@
-from django.conf.urls import url
+from django.urls import include, path
 
-from . import views
+from utilities.urls import get_model_urls
+from . import views  # noqa F401
 
-
+app_name = 'ipam'
 urlpatterns = [
 
-    # VRFs
-    url(r'^vrfs/$', views.VRFListView.as_view(), name='vrf_list'),
-    url(r'^vrfs/add/$', views.VRFEditView.as_view(), name='vrf_add'),
-    url(r'^vrfs/import/$', views.VRFBulkImportView.as_view(), name='vrf_import'),
-    url(r'^vrfs/edit/$', views.VRFBulkEditView.as_view(), name='vrf_bulk_edit'),
-    url(r'^vrfs/delete/$', views.VRFBulkDeleteView.as_view(), name='vrf_bulk_delete'),
-    url(r'^vrfs/(?P<pk>\d+)/$', views.vrf, name='vrf'),
-    url(r'^vrfs/(?P<pk>\d+)/edit/$', views.VRFEditView.as_view(), name='vrf_edit'),
-    url(r'^vrfs/(?P<pk>\d+)/delete/$', views.VRFDeleteView.as_view(), name='vrf_delete'),
+    path('asn-ranges/', include(get_model_urls('ipam', 'asnrange', detail=False))),
+    path('asn-ranges/<int:pk>/', include(get_model_urls('ipam', 'asnrange'))),
 
-    # RIRs
-    url(r'^rirs/$', views.RIRListView.as_view(), name='rir_list'),
-    url(r'^rirs/add/$', views.RIREditView.as_view(), name='rir_add'),
-    url(r'^rirs/delete/$', views.RIRBulkDeleteView.as_view(), name='rir_bulk_delete'),
-    url(r'^rirs/(?P<slug>[\w-]+)/edit/$', views.RIREditView.as_view(), name='rir_edit'),
+    path('asns/', include(get_model_urls('ipam', 'asn', detail=False))),
+    path('asns/<int:pk>/', include(get_model_urls('ipam', 'asn'))),
 
-    # Aggregates
-    url(r'^aggregates/$', views.AggregateListView.as_view(), name='aggregate_list'),
-    url(r'^aggregates/add/$', views.AggregateEditView.as_view(), name='aggregate_add'),
-    url(r'^aggregates/import/$', views.AggregateBulkImportView.as_view(), name='aggregate_import'),
-    url(r'^aggregates/edit/$', views.AggregateBulkEditView.as_view(), name='aggregate_bulk_edit'),
-    url(r'^aggregates/delete/$', views.AggregateBulkDeleteView.as_view(), name='aggregate_bulk_delete'),
-    url(r'^aggregates/(?P<pk>\d+)/$', views.aggregate, name='aggregate'),
-    url(r'^aggregates/(?P<pk>\d+)/edit/$', views.AggregateEditView.as_view(), name='aggregate_edit'),
-    url(r'^aggregates/(?P<pk>\d+)/delete/$', views.AggregateDeleteView.as_view(), name='aggregate_delete'),
+    path('vrfs/', include(get_model_urls('ipam', 'vrf', detail=False))),
+    path('vrfs/<int:pk>/', include(get_model_urls('ipam', 'vrf'))),
 
-    # Roles
-    url(r'^roles/$', views.RoleListView.as_view(), name='role_list'),
-    url(r'^roles/add/$', views.RoleEditView.as_view(), name='role_add'),
-    url(r'^roles/delete/$', views.RoleBulkDeleteView.as_view(), name='role_bulk_delete'),
-    url(r'^roles/(?P<slug>[\w-]+)/edit/$', views.RoleEditView.as_view(), name='role_edit'),
+    path('route-targets/', include(get_model_urls('ipam', 'routetarget', detail=False))),
+    path('route-targets/<int:pk>/', include(get_model_urls('ipam', 'routetarget'))),
 
-    # Prefixes
-    url(r'^prefixes/$', views.PrefixListView.as_view(), name='prefix_list'),
-    url(r'^prefixes/add/$', views.PrefixEditView.as_view(), name='prefix_add'),
-    url(r'^prefixes/import/$', views.PrefixBulkImportView.as_view(), name='prefix_import'),
-    url(r'^prefixes/edit/$', views.PrefixBulkEditView.as_view(), name='prefix_bulk_edit'),
-    url(r'^prefixes/delete/$', views.PrefixBulkDeleteView.as_view(), name='prefix_bulk_delete'),
-    url(r'^prefixes/(?P<pk>\d+)/$', views.prefix, name='prefix'),
-    url(r'^prefixes/(?P<pk>\d+)/edit/$', views.PrefixEditView.as_view(), name='prefix_edit'),
-    url(r'^prefixes/(?P<pk>\d+)/delete/$', views.PrefixDeleteView.as_view(), name='prefix_delete'),
-    url(r'^prefixes/(?P<pk>\d+)/ip-addresses/$', views.prefix_ipaddresses, name='prefix_ipaddresses'),
+    path('rirs/', include(get_model_urls('ipam', 'rir', detail=False))),
+    path('rirs/<int:pk>/', include(get_model_urls('ipam', 'rir'))),
 
-    # IP addresses
-    url(r'^ip-addresses/$', views.IPAddressListView.as_view(), name='ipaddress_list'),
-    url(r'^ip-addresses/add/$', views.IPAddressEditView.as_view(), name='ipaddress_add'),
-    url(r'^ip-addresses/import/$', views.IPAddressBulkImportView.as_view(), name='ipaddress_import'),
-    url(r'^ip-addresses/edit/$', views.IPAddressBulkEditView.as_view(), name='ipaddress_bulk_edit'),
-    url(r'^ip-addresses/delete/$', views.IPAddressBulkDeleteView.as_view(), name='ipaddress_bulk_delete'),
-    url(r'^ip-addresses/(?P<pk>\d+)/$', views.ipaddress, name='ipaddress'),
-    url(r'^ip-addresses/(?P<pk>\d+)/edit/$', views.IPAddressEditView.as_view(), name='ipaddress_edit'),
-    url(r'^ip-addresses/(?P<pk>\d+)/delete/$', views.IPAddressDeleteView.as_view(), name='ipaddress_delete'),
+    path('aggregates/', include(get_model_urls('ipam', 'aggregate', detail=False))),
+    path('aggregates/<int:pk>/', include(get_model_urls('ipam', 'aggregate'))),
 
-    # VLANs
-    url(r'^vlans/$', views.VLANListView.as_view(), name='vlan_list'),
-    url(r'^vlans/add/$', views.VLANEditView.as_view(), name='vlan_add'),
-    url(r'^vlans/import/$', views.VLANBulkImportView.as_view(), name='vlan_import'),
-    url(r'^vlans/edit/$', views.VLANBulkEditView.as_view(), name='vlan_bulk_edit'),
-    url(r'^vlans/delete/$', views.VLANBulkDeleteView.as_view(), name='vlan_bulk_delete'),
-    url(r'^vlans/(?P<pk>\d+)/$', views.vlan, name='vlan'),
-    url(r'^vlans/(?P<pk>\d+)/edit/$', views.VLANEditView.as_view(), name='vlan_edit'),
-    url(r'^vlans/(?P<pk>\d+)/delete/$', views.VLANDeleteView.as_view(), name='vlan_delete'),
+    path('roles/', include(get_model_urls('ipam', 'role', detail=False))),
+    path('roles/<int:pk>/', include(get_model_urls('ipam', 'role'))),
 
+    path('prefixes/', include(get_model_urls('ipam', 'prefix', detail=False))),
+    path('prefixes/<int:pk>/', include(get_model_urls('ipam', 'prefix'))),
+
+    path('ip-ranges/', include(get_model_urls('ipam', 'iprange', detail=False))),
+    path('ip-ranges/<int:pk>/', include(get_model_urls('ipam', 'iprange'))),
+
+    path('ip-addresses/', include(get_model_urls('ipam', 'ipaddress', detail=False))),
+    path('ip-addresses/<int:pk>/', include(get_model_urls('ipam', 'ipaddress'))),
+
+    path('fhrp-groups/', include(get_model_urls('ipam', 'fhrpgroup', detail=False))),
+    path('fhrp-groups/<int:pk>/', include(get_model_urls('ipam', 'fhrpgroup'))),
+
+    path('fhrp-group-assignments/', include(get_model_urls('ipam', 'fhrpgroupassignment', detail=False))),
+    path('fhrp-group-assignments/<int:pk>/', include(get_model_urls('ipam', 'fhrpgroupassignment'))),
+
+    path('vlan-groups/', include(get_model_urls('ipam', 'vlangroup', detail=False))),
+    path('vlan-groups/<int:pk>/', include(get_model_urls('ipam', 'vlangroup'))),
+
+    path('vlans/', include(get_model_urls('ipam', 'vlan', detail=False))),
+    path('vlans/<int:pk>/', include(get_model_urls('ipam', 'vlan'))),
+
+    path('vlan-translation-policies/', include(get_model_urls('ipam', 'vlantranslationpolicy', detail=False))),
+    path('vlan-translation-policies/<int:pk>/', include(get_model_urls('ipam', 'vlantranslationpolicy'))),
+
+    path('vlan-translation-rules/', include(get_model_urls('ipam', 'vlantranslationrule', detail=False))),
+    path('vlan-translation-rules/<int:pk>/', include(get_model_urls('ipam', 'vlantranslationrule'))),
+
+    path('service-templates/', include(get_model_urls('ipam', 'servicetemplate', detail=False))),
+    path('service-templates/<int:pk>/', include(get_model_urls('ipam', 'servicetemplate'))),
+
+    path('services/', include(get_model_urls('ipam', 'service', detail=False))),
+    path('services/<int:pk>/', include(get_model_urls('ipam', 'service'))),
 ]

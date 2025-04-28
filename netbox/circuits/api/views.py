@@ -1,55 +1,125 @@
-from rest_framework import generics
+from rest_framework.routers import APIRootView
 
-from circuits.models import Provider, CircuitType, Circuit
-from circuits.filters import CircuitFilter
-
+from circuits import filtersets
+from circuits.models import *
+from dcim.api.views import PassThroughPortMixin
+from netbox.api.viewsets import NetBoxModelViewSet
 from . import serializers
 
 
-class ProviderListView(generics.ListAPIView):
+class CircuitsRootView(APIRootView):
     """
-    List all providers
+    Circuits API root view
     """
+    def get_view_name(self):
+        return 'Circuits'
+
+
+#
+# Providers
+#
+
+class ProviderViewSet(NetBoxModelViewSet):
     queryset = Provider.objects.all()
     serializer_class = serializers.ProviderSerializer
+    filterset_class = filtersets.ProviderFilterSet
 
 
-class ProviderDetailView(generics.RetrieveAPIView):
-    """
-    Retrieve a single provider
-    """
-    queryset = Provider.objects.all()
-    serializer_class = serializers.ProviderSerializer
+#
+#  Circuit Types
+#
 
-
-class CircuitTypeListView(generics.ListAPIView):
-    """
-    List all circuit types
-    """
+class CircuitTypeViewSet(NetBoxModelViewSet):
     queryset = CircuitType.objects.all()
     serializer_class = serializers.CircuitTypeSerializer
+    filterset_class = filtersets.CircuitTypeFilterSet
 
 
-class CircuitTypeDetailView(generics.RetrieveAPIView):
-    """
-    Retrieve a single circuit type
-    """
-    queryset = CircuitType.objects.all()
-    serializer_class = serializers.CircuitTypeSerializer
+#
+# Circuits
+#
 
-
-class CircuitListView(generics.ListAPIView):
-    """
-    List circuits (filterable)
-    """
-    queryset = Circuit.objects.select_related('type', 'provider', 'site', 'interface__device')
+class CircuitViewSet(NetBoxModelViewSet):
+    queryset = Circuit.objects.all()
     serializer_class = serializers.CircuitSerializer
-    filter_class = CircuitFilter
+    filterset_class = filtersets.CircuitFilterSet
 
 
-class CircuitDetailView(generics.RetrieveAPIView):
-    """
-    Retrieve a single circuit
-    """
-    queryset = Circuit.objects.select_related('type', 'provider', 'site', 'interface__device')
-    serializer_class = serializers.CircuitSerializer
+#
+# Circuit Terminations
+#
+
+class CircuitTerminationViewSet(PassThroughPortMixin, NetBoxModelViewSet):
+    queryset = CircuitTermination.objects.all()
+    serializer_class = serializers.CircuitTerminationSerializer
+    filterset_class = filtersets.CircuitTerminationFilterSet
+
+
+#
+# Circuit Groups
+#
+
+class CircuitGroupViewSet(NetBoxModelViewSet):
+    queryset = CircuitGroup.objects.all()
+    serializer_class = serializers.CircuitGroupSerializer
+    filterset_class = filtersets.CircuitGroupFilterSet
+
+
+#
+# Circuit Group Assignments
+#
+
+class CircuitGroupAssignmentViewSet(NetBoxModelViewSet):
+    queryset = CircuitGroupAssignment.objects.all()
+    serializer_class = serializers.CircuitGroupAssignmentSerializer
+    filterset_class = filtersets.CircuitGroupAssignmentFilterSet
+
+
+#
+# Provider accounts
+#
+
+class ProviderAccountViewSet(NetBoxModelViewSet):
+    queryset = ProviderAccount.objects.all()
+    serializer_class = serializers.ProviderAccountSerializer
+    filterset_class = filtersets.ProviderAccountFilterSet
+
+
+#
+# Provider networks
+#
+
+class ProviderNetworkViewSet(NetBoxModelViewSet):
+    queryset = ProviderNetwork.objects.all()
+    serializer_class = serializers.ProviderNetworkSerializer
+    filterset_class = filtersets.ProviderNetworkFilterSet
+
+
+#
+#  Virtual circuit types
+#
+
+class VirtualCircuitTypeViewSet(NetBoxModelViewSet):
+    queryset = VirtualCircuitType.objects.all()
+    serializer_class = serializers.VirtualCircuitTypeSerializer
+    filterset_class = filtersets.VirtualCircuitTypeFilterSet
+
+
+#
+# Virtual circuits
+#
+
+class VirtualCircuitViewSet(NetBoxModelViewSet):
+    queryset = VirtualCircuit.objects.all()
+    serializer_class = serializers.VirtualCircuitSerializer
+    filterset_class = filtersets.VirtualCircuitFilterSet
+
+
+#
+# Virtual circuit terminations
+#
+
+class VirtualCircuitTerminationViewSet(PassThroughPortMixin, NetBoxModelViewSet):
+    queryset = VirtualCircuitTermination.objects.all()
+    serializer_class = serializers.VirtualCircuitTerminationSerializer
+    filterset_class = filtersets.VirtualCircuitTerminationFilterSet

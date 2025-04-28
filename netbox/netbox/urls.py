@@ -1,44 +1,94 @@
-from django.conf.urls import include, url
-from django.contrib import admin
-from django.views.defaults import page_not_found
+from django.conf import settings
+from django.conf.urls import include
+from django.urls import path
+from django.views.decorators.cache import cache_page
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from views import home, docs, trigger_500
-from users.views import login, logout
+from account.views import LoginView, LogoutView
+from netbox.api.views import APIRootView, StatusView
+from netbox.graphql.schema import schema
+from netbox.graphql.views import NetBoxGraphQLView
+from netbox.plugins.urls import plugin_patterns, plugin_api_patterns
+from netbox.views import HomeView, MediaView, StaticMediaFailureView, SearchView, htmx
 
+_patterns = [
 
-urlpatterns = [
-
-    # Default page
-    url(r'^$', home, name='home'),
+    # Base views
+    path('', HomeView.as_view(), name='home'),
+    path('search/', SearchView.as_view(), name='search'),
 
     # Login/logout
-    url(r'^login/$', login, name='login'),
-    url(r'^logout/$', logout, name='logout'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('logout/', LogoutView.as_view(), name='logout'),
+    path('oauth/', include('social_django.urls', namespace='social')),
 
     # Apps
-    url(r'^circuits/', include('circuits.urls', namespace='circuits')),
-    url(r'^dcim/', include('dcim.urls', namespace='dcim')),
-    url(r'^ipam/', include('ipam.urls', namespace='ipam')),
-    url(r'^secrets/', include('secrets.urls', namespace='secrets')),
-    url(r'^profile/', include('users.urls', namespace='users')),
+    path('circuits/', include('circuits.urls')),
+    path('core/', include('core.urls')),
+    path('dcim/', include('dcim.urls')),
+    path('extras/', include('extras.urls')),
+    path('ipam/', include('ipam.urls')),
+    path('tenancy/', include('tenancy.urls')),
+    path('users/', include('users.urls')),
+    path('virtualization/', include('virtualization.urls')),
+    path('vpn/', include('vpn.urls')),
+    path('wireless/', include('wireless.urls')),
+
+    # Current user views
+    path('user/', include('account.urls')),
+
+    # HTMX views
+    path('htmx/object-selector/', htmx.ObjectSelectorView.as_view(), name='htmx_object_selector'),
 
     # API
-    url(r'^api/circuits/', include('circuits.api.urls', namespace='circuits-api')),
-    url(r'^api/dcim/', include('dcim.api.urls', namespace='dcim-api')),
-    url(r'^api/ipam/', include('ipam.api.urls', namespace='ipam-api')),
-    url(r'^api/secrets/', include('secrets.api.urls', namespace='secrets-api')),
-    url(r'^api/docs/', include('rest_framework_swagger.urls')),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/', APIRootView.as_view(), name='api-root'),
+    path('api/circuits/', include('circuits.api.urls')),
+    path('api/core/', include('core.api.urls')),
+    path('api/dcim/', include('dcim.api.urls')),
+    path('api/extras/', include('extras.api.urls')),
+    path('api/ipam/', include('ipam.api.urls')),
+    path('api/tenancy/', include('tenancy.api.urls')),
+    path('api/users/', include('users.api.urls')),
+    path('api/virtualization/', include('virtualization.api.urls')),
+    path('api/vpn/', include('vpn.api.urls')),
+    path('api/wireless/', include('wireless.api.urls')),
+    path('api/status/', StatusView.as_view(), name='api-status'),
 
-    # Dcoumentation
-    url(r'^docs/$', docs, kwargs={'path': 'index'}, name='docs_root'),
-    url(r'^docs/(?P<path>[\w-]+)/$', docs, name='docs'),
+    path(
+        "api/schema/",
+        cache_page(timeout=86400, key_prefix=f"api_schema_{settings.RELEASE.version}")(
+            SpectacularAPIView.as_view()
+        ),
+        name="schema",
+    ),
+    path('api/schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='api_docs'),
+    path('api/schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='api_redocs'),
 
-    # Error testing
-    url(r'^404/$', page_not_found),
-    url(r'^500/$', trigger_500),
+    # GraphQL
+    path('graphql/', NetBoxGraphQLView.as_view(schema=schema), name='graphql'),
 
-    # Admin
-    url(r'^admin/', include(admin.site.urls)),
+    # Serving static media in Django to pipe it through LoginRequiredMiddleware
+    path('media/<path:path>', MediaView.as_view(), name='media'),
+    path('media-failure/', StaticMediaFailureView.as_view(), name='media_failure'),
 
+    # Plugins
+    path('plugins/', include((plugin_patterns, 'plugins'))),
+    path('api/plugins/', include((plugin_api_patterns, 'plugins-api'))),
 ]
+
+# django-debug-toolbar
+if settings.DEBUG:
+    import debug_toolbar
+    _patterns.append(path('__debug__/', include(debug_toolbar.urls)))
+
+# Prometheus metrics
+if settings.METRICS_ENABLED:
+    _patterns.append(path('', include('django_prometheus.urls')))
+
+# Prepend BASE_PATH
+urlpatterns = [
+    path(settings.BASE_PATH, include(_patterns))
+]
+
+handler404 = 'netbox.views.errors.handler_404'
+handler500 = 'netbox.views.errors.handler_500'

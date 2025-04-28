@@ -1,149 +1,171 @@
-from django.conf.urls import url
+from django.urls import include, path
 
-from secrets.views import secret_add
-
+from utilities.urls import get_model_urls
 from . import views
-from .models import (
-    ConsolePortTemplate, ConsoleServerPortTemplate, PowerPortTemplate, PowerOutletTemplate, InterfaceTemplate,
-)
 
-
+app_name = 'dcim'
 urlpatterns = [
 
-    # Sites
-    url(r'^sites/$', views.SiteListView.as_view(), name='site_list'),
-    url(r'^sites/add/$', views.SiteEditView.as_view(), name='site_add'),
-    url(r'^sites/import/$', views.SiteBulkImportView.as_view(), name='site_import'),
-    url(r'^sites/(?P<slug>[\w-]+)/$', views.site, name='site'),
-    url(r'^sites/(?P<slug>[\w-]+)/edit/$', views.SiteEditView.as_view(), name='site_edit'),
-    url(r'^sites/(?P<slug>[\w-]+)/delete/$', views.SiteDeleteView.as_view(), name='site_delete'),
+    path('regions/', include(get_model_urls('dcim', 'region', detail=False))),
+    path('regions/<int:pk>/', include(get_model_urls('dcim', 'region'))),
 
-    # Rack groups
-    url(r'^rack-groups/$', views.RackGroupListView.as_view(), name='rackgroup_list'),
-    url(r'^rack-groups/add/$', views.RackGroupEditView.as_view(), name='rackgroup_add'),
-    url(r'^rack-groups/delete/$', views.RackGroupBulkDeleteView.as_view(), name='rackgroup_bulk_delete'),
-    url(r'^rack-groups/(?P<pk>\d+)/edit/$', views.RackGroupEditView.as_view(), name='rackgroup_edit'),
+    path('site-groups/', include(get_model_urls('dcim', 'sitegroup', detail=False))),
+    path('site-groups/<int:pk>/', include(get_model_urls('dcim', 'sitegroup'))),
 
-    # Racks
-    url(r'^racks/$', views.RackListView.as_view(), name='rack_list'),
-    url(r'^racks/add/$', views.RackEditView.as_view(), name='rack_add'),
-    url(r'^racks/import/$', views.RackBulkImportView.as_view(), name='rack_import'),
-    url(r'^racks/edit/$', views.RackBulkEditView.as_view(), name='rack_bulk_edit'),
-    url(r'^racks/delete/$', views.RackBulkDeleteView.as_view(), name='rack_bulk_delete'),
-    url(r'^racks/(?P<pk>\d+)/$', views.rack, name='rack'),
-    url(r'^racks/(?P<pk>\d+)/edit/$', views.RackEditView.as_view(), name='rack_edit'),
-    url(r'^racks/(?P<pk>\d+)/delete/$', views.RackDeleteView.as_view(), name='rack_delete'),
+    path('sites/', include(get_model_urls('dcim', 'site', detail=False))),
+    path('sites/<int:pk>/', include(get_model_urls('dcim', 'site'))),
 
-    # Manufacturers
-    url(r'^manufacturers/$', views.ManufacturerListView.as_view(), name='manufacturer_list'),
-    url(r'^manufacturers/add/$', views.ManufacturerEditView.as_view(), name='manufacturer_add'),
-    url(r'^manufacturers/delete/$', views.ManufacturerBulkDeleteView.as_view(), name='manufacturer_bulk_delete'),
-    url(r'^manufacturers/(?P<slug>[\w-]+)/edit/$', views.ManufacturerEditView.as_view(), name='manufacturer_edit'),
+    path('locations/', include(get_model_urls('dcim', 'location', detail=False))),
+    path('locations/<int:pk>/', include(get_model_urls('dcim', 'location'))),
 
-    # Device types
-    url(r'^device-types/$', views.DeviceTypeListView.as_view(), name='devicetype_list'),
-    url(r'^device-types/add/$', views.DeviceTypeEditView.as_view(), name='devicetype_add'),
-    url(r'^device-types/edit/$', views.DeviceTypeBulkEditView.as_view(), name='devicetype_bulk_edit'),
-    url(r'^device-types/delete/$', views.DeviceTypeBulkDeleteView.as_view(), name='devicetype_bulk_delete'),
-    url(r'^device-types/(?P<pk>\d+)/$', views.devicetype, name='devicetype'),
-    url(r'^device-types/(?P<pk>\d+)/edit/$', views.DeviceTypeEditView.as_view(), name='devicetype_edit'),
-    url(r'^device-types/(?P<pk>\d+)/delete/$', views.DeviceTypeDeleteView.as_view(), name='devicetype_delete'),
+    path('rack-roles/', include(get_model_urls('dcim', 'rackrole', detail=False))),
+    path('rack-roles/<int:pk>/', include(get_model_urls('dcim', 'rackrole'))),
 
-    # Component templates
-    url(r'^device-types/(?P<pk>\d+)/console-ports/add/$', views.ConsolePortTemplateAddView.as_view(),
-        name='devicetype_add_consoleport'),
-    url(r'^device-types/(?P<pk>\d+)/console-ports/delete/$', views.component_template_delete,
-        {'model': ConsolePortTemplate}, name='devicetype_delete_consoleport'),
-    url(r'^device-types/(?P<pk>\d+)/console-server-ports/add/$', views.ConsoleServerPortTemplateAddView.as_view(),
-        name='devicetype_add_consoleserverport'),
-    url(r'^device-types/(?P<pk>\d+)/console-server-ports/delete/$', views.component_template_delete,
-        {'model': ConsoleServerPortTemplate}, name='devicetype_delete_consoleserverport'),
-    url(r'^device-types/(?P<pk>\d+)/power-ports/add/$', views.PowerPortTemplateAddView.as_view(),
-        name='devicetype_add_powerport'),
-    url(r'^device-types/(?P<pk>\d+)/power-ports/delete/$', views.component_template_delete,
-        {'model': PowerPortTemplate}, name='devicetype_delete_powerport'),
-    url(r'^device-types/(?P<pk>\d+)/power-outlets/add/$', views.PowerOutletTemplateAddView.as_view(),
-        name='devicetype_add_poweroutlet'),
-    url(r'^device-types/(?P<pk>\d+)/power-outlets/delete/$', views.component_template_delete,
-        {'model': PowerOutletTemplate}, name='devicetype_delete_poweroutlet'),
-    url(r'^device-types/(?P<pk>\d+)/interfaces/add/$', views.InterfaceTemplateAddView.as_view(),
-        name='devicetype_add_interface'),
-    url(r'^device-types/(?P<pk>\d+)/interfaces/delete/$', views.component_template_delete,
-        {'model': InterfaceTemplate}, name='devicetype_delete_interface'),
+    path('rack-reservations/', include(get_model_urls('dcim', 'rackreservation', detail=False))),
+    path('rack-reservations/<int:pk>/', include(get_model_urls('dcim', 'rackreservation'))),
 
-    # Device roles
-    url(r'^device-roles/$', views.DeviceRoleListView.as_view(), name='devicerole_list'),
-    url(r'^device-roles/add/$', views.DeviceRoleEditView.as_view(), name='devicerole_add'),
-    url(r'^device-roles/delete/$', views.DeviceRoleBulkDeleteView.as_view(), name='devicerole_bulk_delete'),
-    url(r'^device-roles/(?P<slug>[\w-]+)/edit/$', views.DeviceRoleEditView.as_view(), name='devicerole_edit'),
+    path('racks/', include(get_model_urls('dcim', 'rack', detail=False))),
+    path('racks/<int:pk>/', include(get_model_urls('dcim', 'rack'))),
+    path('rack-elevations/', views.RackElevationListView.as_view(), name='rack_elevation_list'),
 
-    # Platforms
-    url(r'^platforms/$', views.PlatformListView.as_view(), name='platform_list'),
-    url(r'^platforms/add/$', views.PlatformEditView.as_view(), name='platform_add'),
-    url(r'^platforms/delete/$', views.PlatformBulkDeleteView.as_view(), name='platform_bulk_delete'),
-    url(r'^platforms/(?P<slug>[\w-]+)/edit/$', views.PlatformEditView.as_view(), name='platform_edit'),
+    path('rack-types/', include(get_model_urls('dcim', 'racktype', detail=False))),
+    path('rack-types/<int:pk>/', include(get_model_urls('dcim', 'racktype'))),
 
-    # Devices
-    url(r'^devices/$', views.DeviceListView.as_view(), name='device_list'),
-    url(r'^devices/add/$', views.DeviceEditView.as_view(), name='device_add'),
-    url(r'^devices/import/$', views.DeviceBulkImportView.as_view(), name='device_import'),
-    url(r'^devices/edit/$', views.DeviceBulkEditView.as_view(), name='device_bulk_edit'),
-    url(r'^devices/delete/$', views.DeviceBulkDeleteView.as_view(), name='device_bulk_delete'),
-    url(r'^devices/(?P<pk>\d+)/$', views.device, name='device'),
-    url(r'^devices/(?P<pk>\d+)/edit/$', views.DeviceEditView.as_view(), name='device_edit'),
-    url(r'^devices/(?P<pk>\d+)/delete/$', views.DeviceDeleteView.as_view(), name='device_delete'),
-    url(r'^devices/(?P<pk>\d+)/inventory/$', views.device_inventory, name='device_inventory'),
-    url(r'^devices/(?P<pk>\d+)/lldp-neighbors/$', views.device_lldp_neighbors, name='device_lldp_neighbors'),
-    url(r'^devices/(?P<pk>\d+)/ip-addresses/assign/$', views.ipaddress_assign, name='ipaddress_assign'),
-    url(r'^devices/(?P<pk>\d+)/add-secret/$', secret_add, name='device_addsecret'),
+    path('manufacturers/', include(get_model_urls('dcim', 'manufacturer', detail=False))),
+    path('manufacturers/<int:pk>/', include(get_model_urls('dcim', 'manufacturer'))),
 
-    # Console ports
-    url(r'^devices/(?P<pk>\d+)/console-ports/add/$', views.consoleport_add, name='consoleport_add'),
-    url(r'^console-ports/(?P<pk>\d+)/connect/$', views.consoleport_connect, name='consoleport_connect'),
-    url(r'^console-ports/(?P<pk>\d+)/disconnect/$', views.consoleport_disconnect, name='consoleport_disconnect'),
-    url(r'^console-ports/(?P<pk>\d+)/edit/$', views.consoleport_edit, name='consoleport_edit'),
-    url(r'^console-ports/(?P<pk>\d+)/delete/$', views.consoleport_delete, name='consoleport_delete'),
+    path('device-types/', include(get_model_urls('dcim', 'devicetype', detail=False))),
+    path('device-types/<int:pk>/', include(get_model_urls('dcim', 'devicetype'))),
 
-    # Console server ports
-    url(r'^devices/(?P<pk>\d+)/console-server-ports/add/$', views.consoleserverport_add, name='consoleserverport_add'),
-    url(r'^console-server-ports/(?P<pk>\d+)/connect/$', views.consoleserverport_connect, name='consoleserverport_connect'),
-    url(r'^console-server-ports/(?P<pk>\d+)/disconnect/$', views.consoleserverport_disconnect, name='consoleserverport_disconnect'),
-    url(r'^console-server-ports/(?P<pk>\d+)/edit/$', views.consoleserverport_edit, name='consoleserverport_edit'),
-    url(r'^console-server-ports/(?P<pk>\d+)/delete/$', views.consoleserverport_delete, name='consoleserverport_delete'),
+    path('module-types/', include(get_model_urls('dcim', 'moduletype', detail=False))),
+    path('module-types/<int:pk>/', include(get_model_urls('dcim', 'moduletype'))),
 
-    # Power ports
-    url(r'^devices/(?P<pk>\d+)/power-ports/add/$', views.powerport_add, name='powerport_add'),
-    url(r'^power-ports/(?P<pk>\d+)/connect/$', views.powerport_connect, name='powerport_connect'),
-    url(r'^power-ports/(?P<pk>\d+)/disconnect/$', views.powerport_disconnect, name='powerport_disconnect'),
-    url(r'^power-ports/(?P<pk>\d+)/edit/$', views.powerport_edit, name='powerport_edit'),
-    url(r'^power-ports/(?P<pk>\d+)/delete/$', views.powerport_delete, name='powerport_delete'),
+    path('console-port-templates/', include(get_model_urls('dcim', 'consoleporttemplate', detail=False))),
+    path('console-port-templates/<int:pk>/', include(get_model_urls('dcim', 'consoleporttemplate'))),
 
-    # Power outlets
-    url(r'^devices/(?P<pk>\d+)/power-outlets/add/$', views.poweroutlet_add, name='poweroutlet_add'),
-    url(r'^power-outlets/(?P<pk>\d+)/connect/$', views.poweroutlet_connect, name='poweroutlet_connect'),
-    url(r'^power-outlets/(?P<pk>\d+)/disconnect/$', views.poweroutlet_disconnect, name='poweroutlet_disconnect'),
-    url(r'^power-outlets/(?P<pk>\d+)/edit/$', views.poweroutlet_edit, name='poweroutlet_edit'),
-    url(r'^power-outlets/(?P<pk>\d+)/delete/$', views.poweroutlet_delete, name='poweroutlet_delete'),
+    path('console-server-port-templates/', include(get_model_urls('dcim', 'consoleserverporttemplate', detail=False))),
+    path('console-server-port-templates/<int:pk>/', include(get_model_urls('dcim', 'consoleserverporttemplate'))),
 
-    # Console/power/interface connections
-    url(r'^console-connections/$', views.ConsoleConnectionsListView.as_view(), name='console_connections_list'),
-    url(r'^console-connections/import/$', views.ConsoleConnectionsBulkImportView.as_view(), name='console_connections_import'),
-    url(r'^power-connections/$', views.PowerConnectionsListView.as_view(), name='power_connections_list'),
-    url(r'^power-connections/import/$', views.PowerConnectionsBulkImportView.as_view(), name='power_connections_import'),
-    url(r'^interface-connections/$', views.InterfaceConnectionsListView.as_view(), name='interface_connections_list'),
-    url(r'^interface-connections/import/$', views.InterfaceConnectionsBulkImportView.as_view(), name='interface_connections_import'),
+    path('power-port-templates/', include(get_model_urls('dcim', 'powerporttemplate', detail=False))),
+    path('power-port-templates/<int:pk>/', include(get_model_urls('dcim', 'powerporttemplate'))),
 
-    # Interfaces
-    url(r'^devices/interfaces/add/$', views.InterfaceBulkAddView.as_view(), name='interface_bulk_add'),
-    url(r'^devices/(?P<pk>\d+)/interfaces/add/$', views.interface_add, name='interface_add'),
-    url(r'^devices/(?P<pk>\d+)/interface-connections/add/$', views.interfaceconnection_add, name='interfaceconnection_add'),
-    url(r'^interface-connections/(?P<pk>\d+)/delete/$', views.interfaceconnection_delete, name='interfaceconnection_delete'),
-    url(r'^interfaces/(?P<pk>\d+)/edit/$', views.interface_edit, name='interface_edit'),
-    url(r'^interfaces/(?P<pk>\d+)/delete/$', views.interface_delete, name='interface_delete'),
+    path('power-outlet-templates/', include(get_model_urls('dcim', 'poweroutlettemplate', detail=False))),
+    path('power-outlet-templates/<int:pk>/', include(get_model_urls('dcim', 'poweroutlettemplate'))),
 
-    # Modules
-    url(r'^devices/(?P<pk>\d+)/modules/add/$', views.module_add, name='module_add'),
-    url(r'^modules/(?P<pk>\d+)/edit/$', views.module_edit, name='module_edit'),
-    url(r'^modules/(?P<pk>\d+)/delete/$', views.module_delete, name='module_delete'),
+    path('interface-templates/', include(get_model_urls('dcim', 'interfacetemplate', detail=False))),
+    path('interface-templates/<int:pk>/', include(get_model_urls('dcim', 'interfacetemplate'))),
+
+    path('front-port-templates/', include(get_model_urls('dcim', 'frontporttemplate', detail=False))),
+    path('front-port-templates/<int:pk>/', include(get_model_urls('dcim', 'frontporttemplate'))),
+
+    path('rear-port-templates/', include(get_model_urls('dcim', 'rearporttemplate', detail=False))),
+    path('rear-port-templates/<int:pk>/', include(get_model_urls('dcim', 'rearporttemplate'))),
+
+    path('device-bay-templates/', include(get_model_urls('dcim', 'devicebaytemplate', detail=False))),
+    path('device-bay-templates/<int:pk>/', include(get_model_urls('dcim', 'devicebaytemplate'))),
+
+    path('module-bay-templates/', include(get_model_urls('dcim', 'modulebaytemplate', detail=False))),
+    path('module-bay-templates/<int:pk>/', include(get_model_urls('dcim', 'modulebaytemplate'))),
+
+    path('inventory-item-templates/', include(get_model_urls('dcim', 'inventoryitemtemplate', detail=False))),
+    path('inventory-item-templates/<int:pk>/', include(get_model_urls('dcim', 'inventoryitemtemplate'))),
+
+    path('device-roles/', include(get_model_urls('dcim', 'devicerole', detail=False))),
+    path('device-roles/<int:pk>/', include(get_model_urls('dcim', 'devicerole'))),
+
+    path('platforms/', include(get_model_urls('dcim', 'platform', detail=False))),
+    path('platforms/<int:pk>/', include(get_model_urls('dcim', 'platform'))),
+
+    path('devices/', include(get_model_urls('dcim', 'device', detail=False))),
+    path('devices/<int:pk>/', include(get_model_urls('dcim', 'device'))),
+
+    path('virtual-device-contexts/', include(get_model_urls('dcim', 'virtualdevicecontext', detail=False))),
+    path('virtual-device-contexts/<int:pk>/', include(get_model_urls('dcim', 'virtualdevicecontext'))),
+
+    path('modules/', include(get_model_urls('dcim', 'module', detail=False))),
+    path('modules/<int:pk>/', include(get_model_urls('dcim', 'module'))),
+
+    path('console-ports/', include(get_model_urls('dcim', 'consoleport', detail=False))),
+    path('console-ports/<int:pk>/', include(get_model_urls('dcim', 'consoleport'))),
+    path(
+        'devices/console-ports/add/',
+        views.DeviceBulkAddConsolePortView.as_view(),
+        name='device_bulk_add_consoleport'
+    ),
+
+    path('console-server-ports/', include(get_model_urls('dcim', 'consoleserverport', detail=False))),
+    path('console-server-ports/<int:pk>/', include(get_model_urls('dcim', 'consoleserverport'))),
+    path(
+        'devices/console-server-ports/add/',
+        views.DeviceBulkAddConsoleServerPortView.as_view(),
+        name='device_bulk_add_consoleserverport'
+    ),
+
+    path('power-ports/', include(get_model_urls('dcim', 'powerport', detail=False))),
+    path('power-ports/<int:pk>/', include(get_model_urls('dcim', 'powerport'))),
+    path('devices/power-ports/add/', views.DeviceBulkAddPowerPortView.as_view(), name='device_bulk_add_powerport'),
+
+    path('power-outlets/', include(get_model_urls('dcim', 'poweroutlet', detail=False))),
+    path('power-outlets/<int:pk>/', include(get_model_urls('dcim', 'poweroutlet'))),
+    path(
+        'devices/power-outlets/add/',
+        views.DeviceBulkAddPowerOutletView.as_view(),
+        name='device_bulk_add_poweroutlet'
+    ),
+
+    path('interfaces/', include(get_model_urls('dcim', 'interface', detail=False))),
+    path('interfaces/<int:pk>/', include(get_model_urls('dcim', 'interface'))),
+    path('devices/interfaces/add/', views.DeviceBulkAddInterfaceView.as_view(), name='device_bulk_add_interface'),
+
+    path('front-ports/', include(get_model_urls('dcim', 'frontport', detail=False))),
+    path('front-ports/<int:pk>/', include(get_model_urls('dcim', 'frontport'))),
+
+    path('rear-ports/', include(get_model_urls('dcim', 'rearport', detail=False))),
+    path('rear-ports/<int:pk>/', include(get_model_urls('dcim', 'rearport'))),
+    path('devices/rear-ports/add/', views.DeviceBulkAddRearPortView.as_view(), name='device_bulk_add_rearport'),
+
+    path('module-bays/', include(get_model_urls('dcim', 'modulebay', detail=False))),
+    path('module-bays/<int:pk>/', include(get_model_urls('dcim', 'modulebay'))),
+    path('devices/module-bays/add/', views.DeviceBulkAddModuleBayView.as_view(), name='device_bulk_add_modulebay'),
+
+    path('device-bays/', include(get_model_urls('dcim', 'devicebay', detail=False))),
+    path('device-bays/<int:pk>/', include(get_model_urls('dcim', 'devicebay'))),
+    path('devices/device-bays/add/', views.DeviceBulkAddDeviceBayView.as_view(), name='device_bulk_add_devicebay'),
+
+    path('inventory-items/', include(get_model_urls('dcim', 'inventoryitem', detail=False))),
+    path('inventory-items/<int:pk>/', include(get_model_urls('dcim', 'inventoryitem'))),
+    path(
+        'devices/inventory-items/add/',
+        views.DeviceBulkAddInventoryItemView.as_view(),
+        name='device_bulk_add_inventoryitem'
+    ),
+
+    path('inventory-item-roles/', include(get_model_urls('dcim', 'inventoryitemrole', detail=False))),
+    path('inventory-item-roles/<int:pk>/', include(get_model_urls('dcim', 'inventoryitemrole'))),
+
+    path('cables/', include(get_model_urls('dcim', 'cable', detail=False))),
+    path('cables/<int:pk>/', include(get_model_urls('dcim', 'cable'))),
+
+    # Console/power/interface connections (read-only)
+    path('console-connections/', views.ConsoleConnectionsListView.as_view(), name='console_connections_list'),
+    path('power-connections/', views.PowerConnectionsListView.as_view(), name='power_connections_list'),
+    path('interface-connections/', views.InterfaceConnectionsListView.as_view(), name='interface_connections_list'),
+
+    path('virtual-chassis/', include(get_model_urls('dcim', 'virtualchassis', detail=False))),
+    path('virtual-chassis/<int:pk>/', include(get_model_urls('dcim', 'virtualchassis'))),
+    path(
+        'virtual-chassis-members/<int:pk>/delete/',
+        views.VirtualChassisRemoveMemberView.as_view(),
+        name='virtualchassis_remove_member'
+    ),
+
+    path('power-panels/', include(get_model_urls('dcim', 'powerpanel', detail=False))),
+    path('power-panels/<int:pk>/', include(get_model_urls('dcim', 'powerpanel'))),
+
+    path('power-feeds/', include(get_model_urls('dcim', 'powerfeed', detail=False))),
+    path('power-feeds/<int:pk>/', include(get_model_urls('dcim', 'powerfeed'))),
+
+    path('mac-addresses/', include(get_model_urls('dcim', 'macaddress', detail=False))),
+    path('mac-addresses/<int:pk>/', include(get_model_urls('dcim', 'macaddress'))),
 
 ]
